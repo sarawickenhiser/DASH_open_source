@@ -32,10 +32,10 @@ geometry, use ROBOTIS's own CAD models of the XC330 and OpenRB-150.
 
 Standalone parts. No assembly in this folder references them.
 
-| File |
-|---|
-| `huamnoid_mount.SLDPRT` |
-| `surgie_wrist_T.SLDPRT` |
+| File | What it is |
+|---|---|
+| `huamnoid_mount.SLDPRT` | Connects to surgie_wrist_T and to the underside of any DASH adapter. |
+| `surgie_wrist_T.SLDPRT` | What actually connects to Unitree G1 wrist. |
 
 ## Building one
 
