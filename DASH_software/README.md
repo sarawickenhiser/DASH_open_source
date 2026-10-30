@@ -25,12 +25,39 @@ the adapter-board firmware. `start_sim.sh` runs the same two-arm pipeline in
 MuJoCo with no robot and no boards, and without a dVRK console if you need it
 to.
 
+## Disclaimers
+
 > **Safety.** This is research software, not a medical device or a validated
 > clinical controller. It drives a full-size humanoid and two motorised
 > instruments. Run it only with an independent emergency stop, a second
 > person, a clear workspace, and a blunt dummy instrument until you have
 > validated the calibration on your rig. Never test it on a person or an
 > animal.
+
+- **DASH is not FDA approved**, and no regulatory agency has reviewed it. It
+  must never be used on patients.
+- **No warranty.** The DASH software, firmware and adapter designs come with
+  no warranty whatsoever.
+- **Assembly required.** DASH is not a turnkey system. Setting it up takes
+  software, mechanical and robotics knowledge; see
+  [Set up the hardware](#set-up-the-hardware).
+- **DASH ≠ da Vinci.** DASH uses da Vinci instruments, but drives them with
+  its own adapters, electronics and software. A defect or flaw found using
+  DASH should not be taken to mean that the instruments or the clinical
+  da Vinci system are defective or flawed.
+
+## Credit / Citation
+
+If you use DASH in your research, please cite the following paper:
+
+[DASH: A da Vinci Adapter for Serial-link and Humanoid Robots as an Accessible Platform for Surgical Robotics Research](https://arxiv.org/abs/2610.05792)
+
+Sara Wickenhiser and Junrong Zhou and Zekai Liang and Lizzie Peiros and Liu
+Shanglei and Michael C. Yip
+
+arXiv preprint arXiv:2610.05792 [cs.RO], October 2026.
+
+[bibtex](DASH.bib)
 
 ## What you need
 

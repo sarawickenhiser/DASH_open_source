@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use DASH in your research, please cite the paper below."
+title: "DASH: A da Vinci Adapter for Serial-link and Humanoid Robots"
+type: software
+repository-code: "https://github.com/sarawickenhiser/DASH_open_source"
+authors:
+  - given-names: Sara
+    family-names: Wickenhiser
+  - given-names: Junrong
+    family-names: Zhou
+  - given-names: Zekai
+    family-names: Liang
+  - given-names: Lizzie
+    family-names: Peiros
+  - given-names: Liu
+    family-names: Shanglei
+  - given-names: Michael C.
+    family-names: Yip
+preferred-citation:
+  type: article
+  title: "DASH: A da Vinci Adapter for Serial-link and Humanoid Robots as an Accessible Platform for Surgical Robotics Research"
+  authors:
+    - given-names: Sara
+      family-names: Wickenhiser
+    - given-names: Junrong
+      family-names: Zhou
+    - given-names: Zekai
+      family-names: Liang
+    - given-names: Lizzie
+      family-names: Peiros
+    - given-names: Liu
+      family-names: Shanglei
+    - given-names: Michael C.
+      family-names: Yip
+  journal: "arXiv preprint arXiv:2610.05792"
+  year: 2026
+  month: 10
+  doi: "10.48550/arXiv.2610.05792"
+  url: "https://arxiv.org/abs/2610.05792"
