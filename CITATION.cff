@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use DASH in your research, please cite the paper below."
 title: "DASH: A da Vinci Adapter for Serial-link and Humanoid Robots"
 type: software
+license: MIT
 repository-code: "https://github.com/sarawickenhiser/DASH_open_source"
 authors:
   - given-names: Sara

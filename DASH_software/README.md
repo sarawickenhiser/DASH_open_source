@@ -387,8 +387,14 @@ engineering log, so it also mentions tools and launchers from the full
 research workspace that are not in this release (the single-arm launchers and
 the analysis scripts).
 
-## Third-party assets
+## License
 
-The Unitree G1 model and meshes are BSD 3-Clause, and the dVRK instrument
+The DASH code is released under the [MIT License](LICENSE). If you use it in
+your research, please also cite the paper in
+[Credit / Citation](#credit--citation).
+
+### Third-party assets
+
+These keep their own licenses. The Unitree G1 model and meshes are BSD 3-Clause, and the dVRK instrument
 meshes are MIT. `assets/SOURCES.md` records where each came from and what was
 changed, and `assets/licenses/` holds the license texts.
