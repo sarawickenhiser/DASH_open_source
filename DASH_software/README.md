@@ -97,7 +97,9 @@ arXiv preprint arXiv:2610.05792 [cs.RO], October 2026.
   protocol 2.0, Baud Rate register set to **1 Mbps**;
 - a **PN532** RFID reader on the board's I2C bus (IRQ on pin 2, RESET on
   pin 3);
-- the adapter parts in `assets/dvrk_adapter/meshes/`.
+- the adapter parts: CAD in [`DASH_hardware/`](../DASH_hardware) at the top of
+  this repository, and the meshes the models use in
+  `assets/dvrk_adapter/meshes/`.
 
 **Instruments**: da Vinci instruments, each with an RFID tag the PN532 can
 read. `tool_configs/` holds 46 instrument configs (some instruments have a
