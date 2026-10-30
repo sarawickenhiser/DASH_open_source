@@ -1,0 +1,624 @@
+# RIGHT arm config: G1 + dvrkAssem1 adapter + JHU 420006 Large Needle Driver.
+#
+# Derived from g1_psm_hardware.yaml. The RCM POINT IS UNCHANGED; everything
+# that depends on tool geometry was re-solved for the new adapter and
+# instrument, because the shaft is now 486.30 mm rather than 535.59 mm and it
+# leaves the wrist from a different mount.
+#
+# NOTE THE FILE NAME. It says "sim" for historical reasons only: this is the
+# config the RIGHT arm loads in simulation AND on hardware, and it is the only
+# one that describes the instrument actually mounted on the robot.
+# g1_psm_hardware.yaml, despite its name, is the SUPERSEDED 535.59 mm PSM on
+# the old g1_29dof_rcm.xml model. SYSTEM_CONTEXT section 1 records this trap.
+#
+# CLEARED FOR HARDWARE 2026-09-06. This file was simulation-only while the
+# adapter mount datum was an open question. It is not any more: the seat was
+# measured and placed in g1_29dof_rcm_adapter.xml, which is the same datum the
+# left config has been mirroring since 2026-09-05. The two sides are one datum
+# and they now say the same thing about it -- if the mount is ever re-measured,
+# regenerate both models and re-check both files together.
+
+robot:
+  model: ../assets/unitree_g1/g1_29dof_rcm_adapter.xml
+  base_body: pelvis
+  # Was psm_tool_frame, which no longer exists -- the vestigial 420006 chain it
+  # carried was removed when the real instrument was assembled. The instrument
+  # base is now the rigid frame at the top of the adapter module.
+  end_body: lnd_adaptor
+  active_joints:
+    - right_shoulder_pitch_joint
+    - right_shoulder_roll_joint
+    - right_shoulder_yaw_joint
+    - right_elbow_joint
+    - right_wrist_roll_joint
+    - right_wrist_pitch_joint
+    - right_wrist_yaw_joint
+  locked_joints:
+    waist_yaw_joint: 0.0
+    waist_roll_joint: 0.0
+    waist_pitch_joint: 0.0
+
+  # No body_transform_overrides. The PSM config had to inject a synthetic
+  # wrist->tool transform because its model carried none; here the adapter is
+  # real geometry placed in the MJCF from dvrkAssem1.STEP, so the chain in the
+  # model IS the transform. Re-introduce an override only to correct a MEASURED
+  # mount error on the right wrist.
+  #
+  # Saying that explicitly is what satisfies the hardware motion gate
+  # (validate_motion_configuration). The gate wants the mount question answered
+  # deliberately, and answering it here with an identity override would assert
+  # "measured" while meaning nothing; this says where the geometry comes from.
+  # The left config has carried the identical declaration since 2026-09-05.
+  mount_transform_from_model: true
+
+  # 420006 shaft geometry in the lnd_adaptor frame, read off the assembled
+  # model rather than assumed: the shaft runs along +z, the tip is 486.30 mm
+  # out. (Hardware config: 535.59 mm along -z from psm_tool_frame.)
+  shaft_origin_local_m: [0.0, 0.0, 0.0]
+  shaft_axis_local: [0.0, 0.0, 1.0]
+  tip_local_m: [0.0, 0.0, 0.4863]
+
+  # dvrk_model urdf/common/instruments limits for roll 4670 / wrist 0091.
+  joint_limit_overrides:
+    lnd_roll: [-4.53786, 4.53786]
+    lnd_wrist_pitch: [-1.39626, 1.39626]
+    lnd_wrist_yaw: [-1.39626, 1.39626]
+
+  # Arm-only pose, independent of what is mounted on the wrist, so this is
+  # carried over from the hardware config unchanged.
+  simulated_start_posture_rad: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  # RE-SOLVED 2026-09-17 for 250 mm insertion, from the pose PINNED 2026-09-10
+  # (the one the operator set up on the robot and wanted as the enable default,
+  # measured off rt/lowstate at shaft parameter 189.37 mm = 296.9 mm insertion).
+  # The port and the shaft ANGLE are unchanged -- nominal_shaft_direction_base
+  # below is held to 0.0004 deg of its pinned value and point_base_m is
+  # untouched -- so the instrument only slides 46.9 mm back along its own axis.
+  # Solved by nominal_pose.derive_nominal_shaft_direction with
+  # target_direction = the pinned axis, seeded from the pinned posture:
+  # lateral 0.0034 mm, insertion +0.0001 mm, joint-limit margin 0.7384 rad,
+  # and it moved 0.2513 rad from that seed (max 0.1512 rad on one joint).
+  #
+  #
+  # RE-SOLVED 2026-10-05 so the two arms are MIRRORS again (SYSTEM_CONTEXT
+  # 9.19). The 2026-09-10 pins were two independent hand-set poses, 36.0 deg
+  # apart by ||q_left - sigma*q_right||: this shaft aimed 30.3 deg in across
+  # the mid-line, the left's 14.0, and the left arm was the less responsive
+  # one (pivot sigma 0.100 against 0.126 here). Simply mirroring this side
+  # onto the left put the shafts 47.5 mm apart at 250 mm insertion and through
+  # each other by 300; mirroring the left here cost this arm 21 %. Both now aim
+  # 19.3 deg inward (place_rcm_both_arms.py's measure; 21.0 in plan view) at
+  # this side's old elevation (22.83 deg down): sigma 0.111
+  # on BOTH arms, and the shafts close to 134.9 / 101.8 / 45.0 mm at 250 / 300
+  # / 386 mm insertion -- more clearance at every depth than the old pair
+  # (118.1 / 84.9 / 37.3). Solved by nominal_pose.derive_nominal_shaft_direction
+  # with that target_direction, seeded from the old pin: lateral 0.0027 mm,
+  # insertion +0.0044 mm, joint-limit margin 0.924 rad, at most 14.0 deg from
+  # the old pose on any joint. The left config is sigma * this, exactly, and
+  # tests/test_left_arm_mirror.py holds it there.
+  #
+  # nominal_shaft_direction_base left 'auto' for a reason: auto derives the
+  # direction AND preferred_posture_rad from point_base_m and
+  # initial_insertion_depth_m, so a posture written here would simply be
+  # ignored and alignment would rotate the shaft away from the pose asked for.
+  # Pinning all four together is what makes alignment settle HERE.
+  # The cost is the one section 5 names: these values can now drift out of step
+  # with the geometry, and nothing recomputes them.
+  initial_posture_rad: [0.370609300, -0.262648664, -0.213634292, -0.123207863, 0.157006224, 0.187307150, 0.632128442]
+
+  # Holds the 486.30 mm shaft through the unchanged RCM point at 250 mm
+  # insertion. Not hand-set: this is the posture the arm actually reaches, and
+  # nominal_shaft_direction_base below is the direction it achieves there.
+  # RE-SOLVED 2026-10-05 with the rest, same pose as initial_posture_rad above.
+  preferred_posture_rad: [0.370609300, -0.262648664, -0.213634292, -0.123207863, 0.157006224, 0.187307150, 0.632128442]
+
+instrument:
+  tip_body: lnd_tool_tip
+  active_joints:
+    - lnd_roll
+    - lnd_wrist_pitch
+    - lnd_wrist_yaw
+  # The two jaw links come from the dvrk_model URDF, where jaw_1 mimics +0.5 of
+  # the total opening and jaw_2 mimics -0.5 about the SAME axis. The legacy
+  # model instead gave its jaw links opposite axes and drove both at +0.5, so
+  # the signs must be stated here or the jaws travel together instead of opening.
+  jaw_joints:
+    - lnd_jaw_1
+    - lnd_jaw_2
+  jaw_signs: [0.5, -0.5]
+  # Sites the viewer cross-checks the analytic shaft against.
+  shaft_origin_site: lnd_adaptor_site
+  tip_site: lnd_tool_tip_site
+  # Bodies drawn for the "tool-wrist" frame group.
+  wrist_bodies:
+    - lnd_roll_link
+    - lnd_wrist_pitch_link
+    - lnd_wrist_yaw_link
+  roll_rad: 0.0
+  wrist_pitch_rad: 0.25
+  wrist_yaw_rad: 0.0
+  jaw_opening_rad: 0.7
+
+rcm:
+  # Tracks g1_psm_hardware.yaml. Previously [0.544658, -0.080000, 0.038812],
+  # then [0.3, -0.15, 0.05].
+  #
+  # Moved to x = 0.4 on 2026-09-06 to put the work farther forward. The LEFT
+  # config is the reflection of THIS point and the two must move together:
+  # g1_psm_adapter_left.yaml is a mirror by construction (its header, and
+  # verify_left_mirror.py), so leaving one behind gives the two arms ports at
+  # different reaches, which is not an arrangement anyone chose.
+  point_base_m: [0.4, -0.15, 0.05]
+  # "auto" solves the direction AND preferred_posture_rad above from
+  # point_base_m and initial_insertion_depth_m at startup, so this file cannot
+  # drift out of step with the hardware config again. It matters more here than
+  # there: this model carries the 486.30 mm LND on a different mount, so its
+  # answer is genuinely a different number from the PSM's and copying one
+  # across would be wrong. Previous hand-derived value, for the OLD RCM at
+  # 100 mm insertion, kept only as a record:
+  #   nominal_shaft_direction_base: [0.839025905, 0.377754313, -0.391582954]
+  # Preview with:
+  #   python -m humanoid_rcm.nominal_pose configs/g1_psm_adapter_right.yaml
+  # PINNED 2026-09-10: the shaft axis MEASURED on the robot, replacing 'auto'.
+  # DELIBERATELY UNCHANGED by the 2026-09-17 move to 250 mm insertion: that
+  # re-solve constrained the direction to this vector (target_direction) rather
+  # than letting it float, so the port and the approach angle both survived and
+  # only the depth moved. Letting it float would have swung it 1.915 deg.
+  # 2026-10-05: turned 30.3 -> 19.3 deg inward, same elevation, so the two arms
+  # are mirrors (see initial_posture_rad). Was [0.770968146, 0.505033532,
+  # -0.388006765]. The left carries this reflected in y, exactly.
+  # Restore auto by deleting this line and the two postures' pins.
+  nominal_shaft_direction_base: [0.860439074, 0.330293376, -0.388008874]
+  # 250 mm puts the pivot at 486.30 - 250 = 236.3 mm along the shaft, inside
+  # shaft_parameter_min/max (100/460 mm), and 0.25 is inside insertion_min/max
+  # (0.05/0.386). The shorter lever is also what makes the arm responsive
+  # sideways: pivot sigma rises with insertion depth.
+  # HEADROOM AT THIS DEFAULT, restated after the 2026-09-17 bound change:
+  # insertion 250.0 mm sits 136.3 mm below insertion_max (386 mm) and the
+  # shaft parameter 236.3 mm sits 136.3 mm above shaft_parameter_min (100 mm)
+  # and 223.7 mm below shaft_parameter_max (460 mm). Set to 250 mm on
+  # 2026-09-17 to match the left arm; this starts MID-BAND rather than near a
+  # guard, which the 296.9 mm pin did not.
+  # The cost is responsiveness, and it is the one thing this change gives up:
+  # pivot sigma falls 0.1665 -> 0.1265 m/rad because the lever gets longer
+  # (SYSTEM_CONTEXT section 3). The left arm is at 0.0997 and always was.
+  initial_insertion_depth_m: 0.25
+  # Used INSTEAD of the depth above, and only under --rcm-source detected,
+  # where the launcher re-solves the direction and both postures for the
+  # detected port at this depth (run_full_pipeline.adopt_detected_rcm,
+  # SYSTEM_CONTEXT 9.26). The ports the detector reported on 2026-10-28 sit
+  # 88 mm lower and closer in than point_base_m, and at 250 mm no posture
+  # keeps the elbow outside the 170 mm trunk keep-out.
+  detected_insertion_depth_m: 0.15
+
+control:
+  dt: 0.004
+  damping: 0.025
+  rcm_gain: 3.0
+  direction_gain: 3.0
+  insertion_gain: 3.0
+  posture_gain: 1.5
+  posture_weight: 1.0
+  max_joint_velocity: 0.35
+  joint_limit_margin: 0.04
+  alignment_lateral_tolerance: 0.002
+  alignment_direction_tolerance_deg: 2.0
+  alignment_insertion_tolerance: 0.003
+  alignment_hold_steps: 125
+  # RAISED 10 -> 20 mm on 2026-09-17, at the operator's request, after the
+  # guard kept ending needle hand-overs.
+  #
+  # WHAT IT IS: the hard ceiling on how far the shaft may sit from the pivot
+  # while RCM_ACTIVE. It is the ONLY one of the three RCM faults that LATCHES
+  # -- the shaft-segment guard and the infeasible QP both hold for a cycle and
+  # recover, this one ends the run (is_recoverable_fault). That is why a trip
+  # reads as "it randomly dropped" rather than as a stutter.
+  #
+  # WHAT 20 mm COSTS: on a real port this number is tissue load at the
+  # incision, so this is the budget for how hard the shaft may lean on the
+  # trocar before the run is stopped. Doubling it doubles that excursion. It
+  # does NOT make the controller track better -- section 4 measures
+  # RCM error ~ lag x commanded aggressiveness, so a raised ceiling hides the
+  # cause rather than fixing it. If hand-overs stop faulting but the peak error
+  # now sits near 20 mm, the thing to fix is the demand, not this number.
+  #
+  # alignment_lateral_tolerance above is UNCHANGED at 2 mm on purpose: a run
+  # still has to START centred to within 2 mm. Only the in-motion excursion
+  # budget grew.
+  active_lateral_fault: 0.020
+
+  # RESCALED for the 486.30 mm shaft, and bounded by where material actually is.
+  # Measured on the assembled model, in the lnd_adaptor frame: the housing ends
+  # at 51.4 mm and the wrist clevis begins at 464.0 mm, so the pivot must sit
+  # between those. min 0.160 keeps it clear of the housing (hardware used 0.175
+  # of 535.59 mm; 0.160 is the same fraction of 486.30). max 0.460 stops it
+  # short of the wrist rather than the hardware's 0.525, which on this shaft
+  # would put the pivot inside the pitch joint.
+  # RELAXED 2026-09-17: shaft_parameter_min 0.160 -> 0.100, at the operator's
+  # request, after a needle hand-over was stopped by it. The run reached
+  # 159.9 mm against the 160.0 mm bound -- 0.1 mm over, held for the full 750
+  # cycles of "ease the master back", then latched. That is 326.4 mm of
+  # insertion on a 486.30 mm shaft, against a ceiling of 326.3 mm.
+  #
+  # There was room. The bound was never the physical limit: the housing ends at
+  # 51.4 mm in the lnd_adaptor frame, and 0.160 was a MARGIN, carried across as
+  # the same fraction the 535.59 mm PSM used (0.175/535.59). 0.100 keeps
+  # 48.6 mm of clearance to the housing instead of 108.6 mm.
+  #
+  # WHAT IT BUYS: up to 386.3 mm of insertion, 60 mm more than before.
+  # WHAT IT COSTS: the pivot may now sit 48.6 mm from the instrument body
+  # rather than 108.6 mm, and at that depth the tip is 386 mm past the pivot --
+  # see the bimanual reach note in SYSTEM_CONTEXT 9.17 before using the whole
+  # range with both arms, because the two tips converge across the mid-line.
+  #
+  # NOT what stopped that run laterally: active_lateral_fault never tripped
+  # once in it. These are different guards and only this one fired.
+  shaft_parameter_min: 0.100
+  shaft_parameter_max: 0.460
+  approach_shaft_parameter_max: 0.545
+  # insertion = shaft length - shaft parameter, so these follow from the bounds
+  # above: 0.4863 - 0.460 = 0.026 and 0.4863 - 0.100 = 0.386. Rounded down, as
+  # 0.32 was. insertion_max gates the commanded SETPOINT (controller.py:215);
+  # shaft_parameter_min guards the geometry actually achieved. They have to
+  # move together or the tighter one silently becomes the real limit.
+  insertion_min: 0.05
+  insertion_max: 0.386
+  max_pivot_angle_deg: 35.0
+
+  torso_keepout_radius: 0.17
+  torso_keepout_margin: 0.06
+  torso_keepout_gain: 2.0
+
+demo:
+  pivot_yaw_amplitude_deg: 6.0
+  pivot_pitch_amplitude_deg: 5.0
+  insertion_amplitude_m: 0.025
+  roll_rate_amplitude_rad_s: 0.15
+
+teleop:
+  # The instrument's own wrist provides roll/pitch/yaw and the jaws, driven from
+  # the MTM handle orientation by mtm_teleop_node.py. So the humanoid arm is
+  # responsible for tip POSITION only, and this runtime leaves
+  # /h4hr/joint_command to that node rather than publishing a second stream.
+  tool_orientation_external: true
+
+  twist_filter:
+    linear_acceleration_limit_m_s2: 4.0
+    angular_acceleration_limit_rad_s2: 30.0
+    linear_jerk_limit_m_s3: 400.0
+    angular_jerk_limit_rad_s3: 3000.0
+  controller:
+    dt: 0.004
+    damping: 0.005
+    # Matched to the alignment gains, which are measured-stable on this
+    # hardware: with rcm_gain 3 the arm holds to 0.01 deg over 0.2 s at the
+    # aligned pose, while the stock 12 diverged exponentially from the first
+    # cycle after handover (1.4 -> 11.8 mm in 25 cycles, ~x1.1 per cycle) with
+    # the QP itself healthy throughout -- 0.1 ms solves, 2 iterations, no
+    # active bounds. The instability is the loop, not the solver.
+    # LEFT AT 3.0. Raising this to 15 tripped the active guard instantly in the
+    # real loop -- the same failure the hardware note records for rcm_gain 12,
+    # "diverged exponentially from the first cycle after handover". A 2D sweep
+    # against a first-order lag model showed the gain buying RCM accuracy at no
+    # cost in speed, with zero ripple even at gain 40. That was wrong: it is a
+    # statement about the model, not about this loop. The lead and the RCM error
+    # ARE coupled here, so responsiveness has to be bought from the lead alone
+    # and paid for in RCM margin.
+    rcm_gain: 3.0
+    position_gain: 3.0
+    orientation_gain: 3.0
+    posture_gain: 0.2
+    # Anchors the arm's NULL SPACE, and at 0.00001 it did not. With
+    # tool_orientation_external the tip controller drops the orientation task
+    # entirely -- the instrument's own wrist provides orientation -- so rotation
+    # about the shaft axis is unconstrained by the RCM equality AND by the tip
+    # position task. velocity_smoothing_weight does not stop it: it penalises
+    # a CHANGE in velocity, so once master noise nudges the arm into that free
+    # direction the same velocity is carried forward cycle after cycle. Nothing
+    # restored it, so the arm wound up about the shaft while the tip sat still.
+    # Measured with the master held still but jittering like a real handle on
+    # its rest: 16.2 deg/min of rotation about the shaft, and after 38 s of
+    # teleoperation the wrist roll had wound from 0 to 110 deg with the RCM
+    # still reading 0.0 mm -- the arm folded into a shape that satisfies every
+    # constraint and looks nothing like the aligned pose.
+    #   posture_weight   drift unattended   RCM error moving   tip tracking
+    #   0.00001            16.22 deg/min          5.54 mm      5.598 mm mean
+    #   0.01                0.19 deg/min          0.20 mm      5.592 mm mean
+    #   0.05                0.12 deg/min          0.11 mm      7.742 mm mean
+    # 0.01 removes the drift and the winding without costing tracking, which is
+    # lead-clamp limited here either way. 0.05 starts to fight the master --
+    # commanded tip travel fell by half -- so it is too stiff.
+    # Anchors the arm's null space. At 0.00001 the arm wound about the shaft
+    # axis at 16 deg/min with the master unattended, because with
+    # tool_orientation_external the tip controller drops the orientation task
+    # and nothing else costs rotation about the shaft. Ruled out as the cause
+    # of the hardware handover fault -- that was the command offset being reset
+    # -- and 0.01 measured best in simulation on both drift and RCM error.
+    posture_weight: 0.01
+    # ...applied ONLY in that null space (2026-10-05, SYSTEM_CONTEXT 9.18).
+    # Isotropic, the same 0.01 also damped every direction the operator moves
+    # the tip in: delivered feed-forward was sigma^2/(sigma^2 + w) = 78 % along
+    # the shaft and 62 % sideways here, and the shortfall arrived late through
+    # position feedback -- the tip sat on the 12 mm lead clamp for a quarter of
+    # every moving second on hardware. Restricted, the anchoring above is
+    # unchanged and the tip task is not taxed. false restores the old cost.
+    posture_null_space_only: true
+    # Penalises a CHANGE in joint velocity in the QP cost. At 0.0001 it was
+    # effectively off, and the RCM equality is a HARD constraint here (unlike
+    # the alignment controller, which uses a damped pseudo-inverse), so the
+    # solver was free to satisfy it with large mutually-cancelling velocities:
+    # 0.79 mm of error produced 25 deg/s on hardware. Instrument roll was the
+    # worst offender -- it spins about the shaft axis, so it has a near-zero
+    # column in the RCM Jacobian and sat in the constraint's null space with
+    # nothing costing it.
+    #
+    # 1.0 -> 0.1 on 2026-10-05 (SYSTEM_CONTEXT 9.18). At 1.0 this was a
+    # first-order lag on every commanded motion, time constant
+    # dt * (sigma^2 + w + lambda) / (sigma^2 + w): 90 ms along the shaft and
+    # 160 ms sideways here -- not the ~46 ms section 4 once recorded. 0.1 is
+    # still 1000x the value that misbehaved, and the offender cannot recur:
+    # tool_orientation_external freezes the instrument joints at zero rate.
+    velocity_smoothing_weight: 0.1
+    # How far the tip setpoint may sit ahead of the tip. This bounds the
+    # corrective velocity to position_gain * lead, so at 0.001 the correction
+    # contributed at most 3 mm/s and the arm relied entirely on feedforward.
+    # Measured: this clamp sat saturated at exactly 1.000 mm for every cycle
+    # the tool was moving. 0.008 gives 24 mm/s of catch-up.
+    # 0.008 -> 0.012. The correction velocity is position_gain * lead, so this
+    # clamp -- not max_g1_joint_velocity -- sets responsiveness: at 0.008 a step
+    # test measured a 24.1 mm/s ceiling, exactly 3.0 * 0.008, and raising the
+    # joint ceiling alone changed nothing.
+    #
+    # Measured on a 60 mm y step with the runtime's 0.02 s tracking lag, at
+    # rcm_gain 3, showing t90 and peak RCM against the 10 mm active guard:
+    #     8 mm   2.25 s   0.557 mm    6%   (original)
+    #    12 mm   1.55 s   1.145 mm   11%   (here)
+    #    16 mm   1.22 s   1.876 mm   19%
+    #    20 mm   1.04 s   2.716 mm   27%   tripped the guard in the real loop
+    # 0.012 is the most speed that has not been observed to fault. Drop to 0.008
+    # if the guard still trips; do NOT go above 0.016 without re-measuring.
+    max_position_target_lead_m: 0.012
+    max_orientation_target_lead_rad: 0.0349065850399
+    # 1.0 -> 0.5 on 2026-10-05: back to EQUAL to hardware.g1.max_joint_velocity_rad_s,
+    # which the merger clips every arm joint to whatever the QP planned. At 1.0
+    # the QP solved for rates the transport then cut joint by joint -- the
+    # section 4 trap: the RCM equality assumed those rates would execute, so
+    # the shaft left the pivot (0.33 % of moving cycles on 2026-10-05). Equal,
+    # the QP redistributes within what will really run. Measured that day the
+    # worst joint needs 4.8-6.6 rad/s per m/s of tip speed (not the ~11 once
+    # assumed), so 0.5 carries ~60-75 mm/s. Faster needs BOTH raised together.
+    max_g1_joint_velocity: 0.5
+    max_instrument_joint_velocity: 1.0
+    # Judge joint-limit room from the COMMAND, which is what the runtime clamps
+    # at limit - joint_limit_margin, not from the encoder, which trails it by
+    # the gravity hold. From the encoder the QP kept planning wrist-yaw motion
+    # the clamp then deleted, and the RCM equality that relied on it broke:
+    # every lateral trip on record (2026-10-05 left, 2026-10-26 right) and
+    # every excursion over 6 mm had a wrist yaw pinned at its limit first.
+    # SYSTEM_CONTEXT 9.24. false restores the old bounds.
+    joint_limits_from_command: true
+    qp_absolute_tolerance: 1.0e-9
+    qp_relative_tolerance: 1.0e-9
+    qp_max_iterations: 50
+
+hardware:
+  # The adapter seat was measured and placed correctly in
+  # g1_29dof_rcm_adapter.xml, so the mount datum is a measurement and not the
+  # STEP-file inference it started as. This is the SAME datum the left config
+  # asserts, reflected -- verify_left_mirror.py puts the reflection's own error
+  # at 0.03 mm over 200 postures -- so the two files stand or fall together and
+  # must be re-checked together if the mount is ever re-measured.
+  calibration_confirmed: true
+  calibration_id: 2026-09-06_g1_right_wrist_dvrkAssem1_420006
+
+
+  runtime:
+    control_rate_hz: 250.0
+    state_timeout_s: 0.10
+    startup_timeout_s: 5.0
+    # How many consecutive cycles a RECOVERABLE fault may persist before the
+    # run latches. At 250 Hz, 750 cycles is three seconds.
+    #
+    # Was 250 (one second), sized for the infeasible QP, which clears the
+    # instant the demand becomes reachable and needs no operator action. As of
+    # 2026-09-07 the shaft-segment guard is recoverable too, and that one is
+    # cleared by a HUMAN easing a master handle back after reading the console
+    # -- one second is not that. Three is.
+    #
+    # This is a HOLD, not a licence to keep moving: the controller returns zero
+    # velocity for every one of these cycles and the arm does not advance. The
+    # cost of raising it is a longer freeze before a genuinely stuck geometry
+    # gives up, which is the cheap direction.
+    max_transient_fault_cycles: 750
+
+  # Direct lowcmd transport and gains follow the supplied previous G1 script.
+  # It captures and holds every non-right-arm joint when enabled, so no other
+  # process may publish a conflicting rt/lowcmd stream.
+  g1:
+    max_joint_velocity_rad_s: 0.50
+
+    # Send the commanded joint rate as each motor's dq target during Cartesian
+    # teleoperation (2026-10-05, SYSTEM_CONTEXT 9.18). With dq = 0 the motor's
+    # own kd * (dq - qdot) term BRAKES every commanded motion, so the joint
+    # trails its target by kd/kp = 25 ms at 200/5 before inertia adds more --
+    # hardware measured 40-60 ms of command->encoder lag on 2026-10-05. Every
+    # other phase, and any cycle that commands no motion, still sends dq = 0;
+    # the merger also zeroes a velocity older than 20 ms. false restores the
+    # old command exactly.
+    velocity_feedforward: true
+
+    # HOLDING TORQUE = kp * max_position_command_lead_rad.
+    # The command is clamped to stay within this many radians of the measured
+    # position, so the clamp -- not the actuator -- sets how hard a joint can
+    # pull. At the stock 0.02 rad with kp=55 the wrist could only ever ask for
+    # 1.1 Nm of its 5 Nm capability. A mounted instrument outweighs that: the
+    # wrist sags, the clamp drags the command down after it, and the joint runs
+    # away downward. Raised so the actuator saturates before the clamp does.
+    max_position_command_lead_rad: 0.08
+
+    # Per-motor [kp, kd] overrides. 26/27/28 are the right wrist roll/pitch/yaw,
+    # which carry the whole instrument; 22-25 are shoulder and elbow. Raise
+    # these if the wrist still sags under the tool, and lower them if it
+    # oscillates.
+    # Torque authority comes from kp, NOT from a loose lead clamp. The clamp is
+    # anti-windup: at 0.25 rad the active loop could integrate 14 deg of command
+    # ahead of the arm, overshoot, and diverge (0.4 -> 10 mm in 0.12 s). kp=200
+    # with a 0.08 rad clamp gives the same 16 Nm the shoulder needs to hold the
+    # instrument, with a third of the windup room. The G1 runs kp=300 on its
+    # legs, so this is well inside its normal range.
+    joint_gains:
+      22: [200.0, 14.0]
+      23: [200.0, 14.0]
+      24: [200.0, 14.0]
+      25: [200.0, 14.0]
+      26: [200.0, 14.0]
+      27: [200.0, 14.0]
+      28: [200.0, 14.0]
+    # The controller's base-to-arm model locks waist yaw/roll/pitch at zero.
+    # Arming is refused unless measured motors 12/13/14 match within tolerance.
+    required_locked_motor_positions_rad:
+      12: 0.0
+      13: 0.0
+      14: 0.0
+    locked_motor_tolerance_rad: 0.05
+
+  # Checked at the instant /humanoid_rcm/enable rises: the alignment is
+  # simulated forward from the measured arm pose and arming is refused if that
+  # path would leave the shaft segment, exceed the travel budget, or not reach
+  # RCM_READY. Starting from a pose near the aligned one keeps this cheap.
+  # On enable the runtime drives the arm to robot.initial_posture_rad first and
+  # only then starts RCM alignment, holding the arm across both in one process.
+  # Without this the staging move had to be a separate --goto-posture run, and
+  # the G1 drops the arm the instant that process stops publishing rt/lowcmd.
+  # The ramp is validated first (joint limits, and it may not push any monitored
+  # point further into the trunk keep-out than it already is), and the alignment
+  # path is judged FROM the staging pose rather than from wherever the arm was
+  # resting. Set enabled false to align from the measured pose as before.
+  staging:
+    enabled: true
+    tolerance_rad: 0.02
+
+  arming:
+    check_predicted_path: true
+    max_predicted_travel_rad: 4.0
+    max_predicted_seconds: 30.0
+
+  ros2:
+    base_frame: pelvis
+    mtm_pose_topic: /MTMR/measured_cp
+    mtm_gripper_topic: /MTMR/gripper/measured_js
+    gripper_joint: null
+    clutch_topic: /footpedals/clutch
+    rcm_topic: /RCM_pose_right
+    # Read ONLY under --rcm-source detected (SYSTEM_CONTEXT 9.26). The ArUco
+    # detector (aruco_pose_publisher, not in this repo) stamps its RCMs
+    # robot_base, which IS the G1 base frame, i.e. pelvis -- confirmed by the
+    # operator 2026-10-28. Every other mode still accepts base_frame alone.
+    # Never list a frame here that is merely near pelvis: there is no
+    # transform, only a rename.
+    detected_rcm_frames: [robot_base]
+    psm_state_topic: /joint_states
+    psm_command_topic: /h4hr/joint_command
+    enable_topic: /humanoid_rcm/enable
+    estop_topic: /h4hr/estop
+    status_topic: /humanoid_rcm/status
+    # Cartesian command inputs for --command-source servo. Namespaced per side
+    # and matched to measured_cp.py's namespaces, so the read side and the write
+    # side of one hand share a prefix.
+    #
+    # These two are NEW topics, which this workspace otherwise avoids. Same
+    # reasoning measured_cp.py records for its outputs: nothing already on the
+    # graph carries a tool-tip pose, they are namespaced per side from the start
+    # rather than separated after the fact by joint name, and the names were
+    # already fixed by changwei/cotroller/servo_cp.py. The /h4hr/* collision that
+    # motivates the rule (SYSTEM_CONTEXT section 8.5) comes from an absolute
+    # unnamespaced prefix, which these are not.
+    servo_cp_topic: /surgie_hand_right/servo_cp
+    servo_cp_rel_topic: /surgie_hand_right/servo_cp_rel
+
+  # --command-source servo only. Ignored by the MTM path.
+  servo_cp:
+    # The absolute mode keeps walking on its own, so it needs a SPEED limit;
+    # these default to the mtm block's values when omitted.
+    max_linear_speed_m_s: 0.05
+    max_angular_speed_rad_s: 2.5
+    # How far ahead of the tip a goal may sit. This is what bounds unattended
+    # travel if the commanding process dies mid-move: at most this distance,
+    # walked off at max_linear_speed_m_s. A caller wanting to go further
+    # re-sends. Raising it trades that bound for fewer round trips.
+    max_absolute_step_m: 0.05
+    # One servo_cp_rel message is one step. Smaller, because this one is a typo
+    # guard: a mistyped 0.5 becomes a 10 mm move the right way.
+    max_relative_step_m: 0.01
+    max_step_deg: 20.0
+    # A commander quieter than this stops NEW motion being initiated and is
+    # reported on the console. It is NOT a fault: the setpoint is held, which is
+    # the whole reason this source needs no heartbeat.
+    command_timeout_s: 2.0
+    # The pedal tray is shared between both arms and both wrists, so a foot
+    # would silently freeze a scripted bimanual sequence with every command
+    # still being accepted. Turn on only when running beside a live console.
+    honor_clutch: false
+
+  mtm:
+    # Supplied G1 script maps master [x,y,z] increments to [y,-x,z].
+    translation_matrix:
+      - [0.0, 1.0, 0.0]
+      - [-1.0, 0.0, 0.0]
+      - [0.0, 0.0, 1.0]
+    translation_scale: 0.8
+    alignment_rpy_deg: [0.0, 0.0, 0.0]
+    rotation_scale: 1.0
+    # Ceiling on the feedforward tip speed. Nearly all commanded motion comes
+    # through here, so this was the hard limit on how fast the tool could
+    # follow the master no matter how fast the master moved.
+    max_linear_speed_m_s: 0.20
+    max_angular_speed_rad_s: 2.5
+    twist_hold_seconds: 0.03
+
+  psm:
+    # Measured model -> H4HR signs from the supplied PSM control script.
+    # roll and yaw both flipped from the hardware config's [-1, -1, 1], on the
+    # handle: driving the MTM yaw left yawed the tool right, and roll likewise.
+    #
+    # Yaw is independently confirmed by measurement. The orientation Jacobian in
+    # the tool tip frame at the configured instrument pose (roll 0, pitch 0.25,
+    # yaw 0) is identical between the old and new models for roll and pitch, and
+    # exactly negated for yaw:
+    #     roll   old [ 0.247 0 0.969]   new [ 0.247 0 0.969]   cos +1.0000
+    #     pitch  old [0 -1 0]           new [0 -1 0]           cos +1.0000
+    #     yaw    old [1 0 0]            new [-1 0 0]           cos -1.0000
+    # lnd_wrist_yaw really does turn opposite to psm_wrist_yaw_joint -- the
+    # URDF's wrist_yaw axis runs the other way from the hand-built chain.
+    #
+    # Roll was ALSO flipped here once, on an operator's report that the tool
+    # rolled backwards. That was a mis-diagnosis and it is reverted: this sign
+    # cannot produce that symptom, and the geometry says it must match the
+    # hardware config.
+    #
+    #   * Geometry. Re-measured 2026-09-02, same method as the yaw column
+    #     above: roll's axis in the tip frame is [+0.2474, 0, +0.9689] in BOTH
+    #     models, cos +1.0000. Identical axis means identical sign, and the
+    #     hardware config's -1 is the one derived from the supplied PSM control
+    #     script. Pitch (also cos +1.0000) already agrees at -1 in both files,
+    #     and yaw (cos -1.0000) correctly differs. Roll was the odd one out.
+    #   * Reachability. teleop.tool_orientation_external is true, so
+    #     run_hardware's only use of these signs is hardware_to_model -- it
+    #     READS the wrist. The `if not tool_external` guard on publish_psm
+    #     means it never commands roll at all; mtm_teleop_node owns that topic.
+    #     So no value here can reverse the direction the physical tool rolls.
+    #     What the flip did reverse was the model's belief, which is what
+    #     publish_sim_arm feeds the viewer -- the sim picture rolled the other
+    #     way and looked fixed while the tool was untouched.
+    #
+    # A wrong sign here corrupts the tip POSITION the RCM controller servos to
+    # whenever the wrist is pitched, since the tip is off the roll axis.
+    # Handedness of the commanded roll is roll_sign in mtm_teleop_node.py.
+    #
+    # These columns are pure single-axis and match one-to-one, so no sign choice
+    # here can couple pitch into yaw; that coupling is the wrist decomposition.
+    model_to_hardware_signs: [-1.0, -1.0, -1.0]
+    max_position_command_lead_rad: 0.05
+    mtm_grip_open_rad: 1.05
+    mtm_grip_closed_rad: 0.0
+    h4hr_open_grip_deg: -60.0
+    h4hr_closed_grip_deg: 38.0

@@ -1,0 +1,30 @@
+{
+    "4E AC 98 6E": {
+        "name": "MARYLAND_BIPOLAR_FORCEPS",
+        "config": "MARYLAND_BIPOLAR_FORCEPS_400172.json"
+    },
+
+    "04 3D D4 E4": {
+        "name": "FENESTRATED_BIPOLAR_FORCEPS",
+        "config": "FENESTRATED_BIPOLAR_FORCEPS_400205.json"
+    },
+    "04 33 0D E4": {
+        "name": "FENESTRATED_BIPOLAR_FORCEPS",
+        "config": "FENESTRATED_BIPOLAR_FORCEPS_400205.json"
+    },
+
+    "04 5C C9 E4": {
+        "name": "LARGE_NEEDLE_DRIVER_400006",
+        "config": "LARGE_NEEDLE_DRIVER_400006.json"
+    },
+
+    "04 55 9D E4": {
+        "name": "LARGE_NEEDLE_DRIVER_400006",
+        "config": "LARGE_NEEDLE_DRIVER_400006.json"
+    },
+
+    "04 4B D7 E4": {
+        "name": "CURVED_SCISSORS_400178",
+        "config": "CURVED_SCISSORS_400178.json"
+    }
+}

@@ -1,0 +1,19 @@
+# pip dependencies for DASH. See README.md for the rest:
+#   - ROS 2 Humble (rclpy, std_msgs, sensor_msgs, geometry_msgs, std_srvs,
+#     ament_index_python) and the DYNAMIXEL SDK come from apt:
+#       sudo apt install ros-humble-desktop ros-humble-dynamixel-sdk
+#   - unitree_sdk2py is installed from source:
+#       https://github.com/unitreerobotics/unitree_sdk2_python
+
+# Controller and pipeline
+numpy>=1.24
+PyYAML>=6.0
+proxsuite>=0.7.3
+
+# Servo driver and RFID scanner (serial to the OpenRB-150 boards)
+pyserial>=3.5
+
+# Models, the VIEWER=1 window, place_rcm_both_arms.py, verify_left_mirror.py
+mujoco>=3.2
+Pillow
+glfw

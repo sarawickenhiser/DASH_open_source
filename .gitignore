@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Per-cycle CSVs and console logs, if LOG= or READOUT= point inside the checkout.
+*.csv
+*.log
+
+.vscode/
+*.swp
+.DS_Store
