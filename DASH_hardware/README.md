@@ -66,3 +66,25 @@ Shanglei and Michael C. Yip
 arXiv preprint arXiv:2610.05792 [cs.RO], October 2026.
 
 [bibtex](../DASH_software/DASH.bib)
+
+## License
+
+The DASH designs in this folder are © 2026 Sara Wickenhiser and are licensed
+under the [Creative Commons Attribution 4.0 International License](LICENSE)
+(CC BY 4.0). You may share and adapt them for any purpose, including
+commercially, as long as you give credit.
+
+**Giving credit means citing the paper.** The attribution this license
+requires is a citation of the paper under
+[Credit / Citation](#credit--citation), in any publication, presentation,
+product documentation or design files that use these designs or work based on
+them. Also link to this repository, state that the designs are licensed under
+CC BY 4.0, and say whether you changed them.
+
+**Not covered.** These are models of purchased parts, included so that the
+assembly opens. They are not licensed under CC BY 4.0 and belong to their
+makers:
+
+- `XL,XC-330.SLDASM`, the ROBOTIS DYNAMIXEL XC330 servo
+- `OpenRB-150.SLDASM`, the ROBOTIS OpenRB-150 board
+- `RFID SCANNER CAD.SLDPRT`, the PN532 NFC module

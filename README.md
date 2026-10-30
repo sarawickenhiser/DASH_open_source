@@ -44,7 +44,7 @@ arXiv preprint arXiv:2610.05792 [cs.RO], October 2026.
 
 ## License
 
-The software in `DASH_software/` is released under the
-[MIT License](DASH_software/LICENSE). The third-party robot and instrument
-models in `DASH_software/assets/` keep their own licenses, listed in that
-folder.
+| Folder | License |
+|---|---|
+| `DASH_software/` | [MIT License](DASH_software/LICENSE). The third-party robot and instrument models in `DASH_software/assets/` keep their own licenses, listed in that folder. |
+| `DASH_hardware/` | [CC BY 4.0](DASH_hardware/LICENSE), with citation of the paper above as the required credit. The models of purchased parts are not covered; see [its License section](DASH_hardware/README.md#license). |
