@@ -13,12 +13,12 @@ authors:
     family-names: Liang
   - given-names: Lizzie
     family-names: Peiros
-  - given-names: Liu
-    family-names: Shanglei
+  - given-names: Shanglei
+    family-names: Liu
   - given-names: Michael C.
     family-names: Yip
 preferred-citation:
-  type: article
+  type: generic
   title: "DASH: A da Vinci Adapter for Serial-link and Humanoid Robots as an Accessible Platform for Surgical Robotics Research"
   authors:
     - given-names: Sara
@@ -29,12 +29,10 @@ preferred-citation:
       family-names: Liang
     - given-names: Lizzie
       family-names: Peiros
-    - given-names: Liu
-      family-names: Shanglei
+    - given-names: Shanglei
+      family-names: Liu
     - given-names: Michael C.
       family-names: Yip
-  journal: "arXiv preprint arXiv:2610.05792"
   year: 2026
-  month: 10
   doi: "10.48550/arXiv.2610.05792"
   url: "https://arxiv.org/abs/2610.05792"
