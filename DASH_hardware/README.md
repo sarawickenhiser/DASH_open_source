@@ -45,6 +45,8 @@ README: one OpenRB-150, four XC330-T181-T servos and a PN532 reader. That
 README then covers flashing the board, setting the servo IDs and registering
 your instruments' RFID tags.
 
+The Bill of Materials can be found at this link: https://docs.google.com/document/d/17jiFamErzaQVCkMrR0Qn5jwf4GUKaSC8EqlW4iDkMCw/edit?usp=sharing
+
 The MuJoCo simulation uses STL meshes of the adapter, which are in
 [`DASH_software/assets/dvrk_adapter/meshes/`](../DASH_software/assets/dvrk_adapter/meshes).
 
