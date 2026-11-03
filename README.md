@@ -4,9 +4,7 @@
 Platform for Surgical Robotics Research**
 ([arXiv:2610.05792](https://arxiv.org/abs/2610.05792))
 
-Purpose-built surgical robots are expensive and need dedicated
-infrastructure, which keeps them out of many hospitals and labs. DASH mounts
-da Vinci instruments on general-purpose robots instead. Its adapters need no
+DASH mounts da Vinci instruments on general-purpose robots instead. Its adapters need no
 modification to the instruments: each one engages the instrument's native
 latch, drives its disks with DYNAMIXEL servos, and identifies the inserted
 instrument over RFID to load that instrument's kinematics and coupling matrix.
